@@ -5,11 +5,36 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"kafka/src/config"
 	"kafka/src/models"
 )
+
+func cleanSubredditInput(input string) string {
+	if input == "" {
+		return ""
+	}
+
+	s := strings.ToLower(input)
+	s = strings.TrimPrefix(s, "https://")
+	s = strings.TrimPrefix(s, "http://")
+	s = strings.TrimPrefix(s, "www.")
+	s = strings.TrimPrefix(s, "reddit.com/r/")
+	s = strings.TrimPrefix(s, "old.reddit.com/r/")
+
+	if strings.HasPrefix(s, "r/") {
+		s = strings.TrimPrefix(s, "r/")
+	}
+	if strings.HasPrefix(s, "/r/") {
+		s = strings.TrimPrefix(s, "/r/")
+	}
+
+	s = strings.TrimRight(s, "/")
+
+	return s
+}
 
 func getRandomSubreddit() string {
 	var choices []string
@@ -46,23 +71,22 @@ func fetchSingleMeme(subreddit string) (*models.MemeResponse, error) {
 	return &meme, nil
 }
 
-func GetMeme(userSubreddit string, forceNSFW bool) (*models.MemeResponse, error) {
-	targetSubreddit := userSubreddit
+func GetMeme(userInput string) (*models.MemeResponse, error) {
+	targetSubreddit := cleanSubredditInput(userInput)
+	tryingUserRequest := (targetSubreddit != "")
 
 	for i := 0; i < config.MemeMaxRetries; i++ {
+		currentSub := targetSubreddit
 
-		if userSubreddit == "" {
-			targetSubreddit = getRandomSubreddit()
+		if !tryingUserRequest {
+			currentSub = getRandomSubreddit()
 		}
 
-		meme, err := fetchSingleMeme(targetSubreddit)
+		meme, err := fetchSingleMeme(currentSub)
 		if err != nil {
-			return nil, err
-		}
-
-		if forceNSFW {
-			if meme.NSFW {
-				return meme, nil
+			if tryingUserRequest {
+				tryingUserRequest = false
+				continue
 			}
 			continue
 		}
@@ -70,5 +94,5 @@ func GetMeme(userSubreddit string, forceNSFW bool) (*models.MemeResponse, error)
 		return meme, nil
 	}
 
-	return nil, fmt.Errorf("failed to find a meme matching criteria after retries")
+	return nil, fmt.Errorf("failed to find a meme after %d retries", config.MemeMaxRetries)
 }

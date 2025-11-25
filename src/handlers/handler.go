@@ -13,13 +13,12 @@ func Router(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config.Config
 		return
 	}
 
-	if !strings.HasPrefix(m.Content, cfg.Bot.Prefix) {
+	content, ok := strings.CutPrefix(m.Content, cfg.Bot.Prefix)
+	if !ok {
 		return
 	}
 
-	content := strings.TrimPrefix(m.Content, cfg.Bot.Prefix)
 	args := strings.Fields(content)
-
 	if len(args) == 0 {
 		return
 	}

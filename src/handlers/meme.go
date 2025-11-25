@@ -14,36 +14,17 @@ func HandleMemeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	options := i.ApplicationCommandData().Options
-	allowNSFW := false
 	subreddit := ""
 
 	for _, opt := range options {
-		if opt.Name == "nsfw" {
-			allowNSFW = opt.BoolValue()
-		}
 		if opt.Name == "subreddit" {
 			subreddit = opt.StringValue()
 		}
 	}
 
-	channel, err := s.Channel(i.ChannelID)
-	if err != nil {
-		return
-	}
-
-	if allowNSFW && !channel.NSFW {
-		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: &[]string{"❌ You cannot use `nsfw:True` in a non-NSFW channel."}[0],
-		})
-		return
-	}
-
-	meme, err := services.GetMeme(subreddit, allowNSFW)
+	meme, err := services.GetMeme(subreddit)
 	if err != nil {
 		msg := "❌ Failed to fetch meme."
-		if allowNSFW {
-			msg += " (Could not find an NSFW meme in this subreddit after retries)"
-		}
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
 			Content: &msg,
 		})
@@ -66,32 +47,17 @@ func HandleMemeSlash(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func HandleMemeText(s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	allowNSFW := false
 	subreddit := ""
 
 	for _, arg := range args {
-		if arg == "nsfw" {
-			allowNSFW = true
-		} else {
-			subreddit = arg
-		}
-	}
-
-	channel, err := s.Channel(m.ChannelID)
-	if err != nil {
-		return
-	}
-
-	if allowNSFW && !channel.NSFW {
-		s.ChannelMessageSend(m.ChannelID, "❌ You cannot use the NSFW flag in a non-NSFW channel.")
-		return
+		subreddit = arg
 	}
 
 	s.ChannelTyping(m.ChannelID)
 
-	meme, err := services.GetMeme(subreddit, allowNSFW)
+	meme, err := services.GetMeme(subreddit)
 	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "❌ Failed to fetch meme (or couldn't find NSFW content).")
+		s.ChannelMessageSend(m.ChannelID, "❌ Failed to fetch meme.")
 		return
 	}
 
