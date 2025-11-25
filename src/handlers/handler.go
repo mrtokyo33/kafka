@@ -25,9 +25,17 @@ func Router(s *discordgo.Session, m *discordgo.MessageCreate, cfg *config.Config
 	}
 
 	command := strings.ToLower(args[0])
+	commandArgs := args[1:]
 
 	switch command {
-	case "ping":
-		HandlePing(s, m)
+	case "meme":
+		HandleMemeText(s, m, commandArgs)
+	}
+}
+
+func SlashRouter(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	cmdMap := GetCommandMap()
+	if handler, ok := cmdMap[i.ApplicationCommandData().Name]; ok {
+		handler(s, i)
 	}
 }

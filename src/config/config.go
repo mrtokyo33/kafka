@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Bot struct {
 		Token   string
+		GuildID string
 		Prefix  string
 		Intents []string
 	}
@@ -36,6 +37,8 @@ func Load() (*Config, error) {
 	if cfg.Bot.Token == "" {
 		return nil, fmt.Errorf("DISCORD_TOKEN not found in .env")
 	}
+
+	cfg.Bot.GuildID = os.Getenv("DISCORD_GUILD_ID")
 
 	return &cfg, nil
 }
