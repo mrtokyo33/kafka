@@ -1,0 +1,5 @@
+bot:
+  prefix: "kfk!"
+  intents:
+    - "GUILD_MESSAGES"
+    - "MESSAGE_CONTENT"
