@@ -11,12 +11,18 @@ var Commands = []CommandDef{
 	{
 		Definition: &discordgo.ApplicationCommand{
 			Name:        "meme",
-			Description: "Get a random meme from r/MemesBR",
+			Description: "Get a random meme",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 					Name:        "nsfw",
-					Description: "Allow NSFW content",
+					Description: "Force NSFW content (Must be in NSFW channel)",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "subreddit",
+					Description: "Optional specific subreddit",
 					Required:    false,
 				},
 			},
